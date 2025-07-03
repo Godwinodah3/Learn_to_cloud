@@ -1,0 +1,37 @@
+name: Test workflow
+
+on:
+  push:
+    branches:
+      - main # You can specify other branches if needed
+
+permissions:
+  id-token: write # Required to request the OIDC token
+  contents: read  # Optional, allows reading repository contents
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Optional: Retrieves and echos OIDC token for troubleshooting
+      # run: |
+      #   echo "OIDC Token: $ACTIONS_ID_TOKEN_REQUEST_TOKEN"
+      #   echo $ACTIONS_ID_TOKEN_REQUEST_TOKEN | base64 -d # base64 decode this in a terminal or as JWT.io to view the token properties.
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::214866497579:role/gh-role # Replace with your IAM role ARN
+          role-session-name: test
+          aws-region: us-west-1
+
+      - name: AWS command
+        run: |
+          aws sts get-caller-identity
+          aws s3 ls
+          aws s3 ls s3://huge-logistics-prod-stlerror
+          aws s3 cp s3://huge-logistics-prod-stlerror/flag.txt -
